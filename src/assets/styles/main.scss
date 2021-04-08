@@ -1,0 +1,14 @@
+@import "./abstract/_variables.scss";
+
+html {
+    /* to make sure 1rem = 10px */
+    font-size: 62.5%;
+}
+
+body {
+    font-family: Poppins, Arial, sans-serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    background-color: var(--background-color);
+    color: var(--font-color-primary);
+}
