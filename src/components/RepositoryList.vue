@@ -1,5 +1,5 @@
 <template>
-  <card title="Repositories" subtitle="List of top repositories for user X">
+  <card title="Repositories" v-bind:subtitle="`List of top repositories for user ${owner}`">
     <div class="list">
       <div v-for="(item, index) in repositories" v-bind:key="index" class="list-item">
         <div class="list-bullet">
@@ -7,9 +7,9 @@
         </div>
         <div class="list-content">
           <p class="list-content-title">
-            <router-link v-bind:to="item.url">{{ item.title }}</router-link>
+            <router-link v-bind:to="`/repository/${item.fullName}`">{{ item.name }}</router-link>
           </p>
-          <p class="list-content-subtitle">{{ item.subtitle }}</p>
+          <p class="list-content-subtitle">{{ item.language }}</p>
         </div>
       </div>
     </div>
@@ -60,7 +60,8 @@
       Card
     },
     props: {
-      repositories: { type: Array, required: true }
+      repositories: { type: Array, required: true },
+      owner: { type: String, required: true }
     }
   }
 </script>

@@ -13,10 +13,16 @@ const ApiService = {
         Vue.axios.defaults.headers.common["Content-Type"] = "application/json";
     },
 
-    get(resource, slug = "") {
-        return Vue.axios.get(`${resource}/${slug}`)
-            .then(response => response.data)
-            .catch(error => { throw new Error(`Api Service failed: ${error}`) });
+    async get(resource, slug = "") {
+        try {
+          return (await Vue.axios.get(`${resource}/${slug}`)).data;
+        } catch(error) {
+            throw {
+                statusCode: error.response.status,
+                resource: `${resource}/${slug}`,
+                message: error.response.data.message
+            };
+        }
     }
 }
 

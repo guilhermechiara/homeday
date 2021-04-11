@@ -1,22 +1,40 @@
 <template>
-  <repository v-bind:repository="repository"></repository>
+  <div>
+    <repository
+        v-bind:repository="getRepositoryByUsernameAndName(
+            this.$route.params.username,
+            this.$route.params.repository
+        )"
+    >
+    </repository>
+  </div>
 </template>
 
 <script>
+  import { FETCH_REPOSITORY } from "@/store/actions";
+  import { mapGetters } from 'vuex';
+
   import Repository from "../components/Repository";
 
   export default {
     name: 'view-repository',
-    data() {
-      return {
-        repository: { id: null, name: 'kwest-users', owner: 'Repo user', language: 'Python' }
+    components: {
+      Repository,
+    },
+
+    async beforeMount() {
+      try {
+        await this.$store.dispatch(
+            FETCH_REPOSITORY,
+            `${this.$route.params.username}/${this.$route.params.repository}`
+        );
+      } catch (err) {
+        await this.$router.push('/not-found')
       }
     },
-    components: {
-      Repository
-    },
-    beforeMount() {
-      this.repository.id = this.$route.params.id;
+
+    computed: {
+      ...mapGetters(["getRepositoryByUsernameAndName"])
     }
   }
 </script>

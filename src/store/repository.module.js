@@ -1,6 +1,7 @@
-import { FETCH_REPOSITORY, FETCH_USER_REPOSITORIES } from "./actions";
-import { SET_REPOSITORY } from "./mutations";
-import { RepositoryService, UserService } from "../common/api";
+import { FETCH_REPOSITORY } from "./actions";
+import { SET_REPOSITORIES } from "./mutations";
+import { RepositoryService } from "../common/api";
+import { transformToDataStore } from "@/common/utils";
 
 const initialState = {
     data: {},
@@ -11,52 +12,55 @@ const initialState = {
 export const state = { ...initialState };
 
 export const actions = {
-    [FETCH_REPOSITORY](context, repositoryUrl) {
-        return RepositoryService.get(repositoryUrl)
-            .then(repository => context.commit(SET_REPOSITORY, repository))
-            .catch(err => { throw new Error(err) });
-    },
-    [FETCH_USER_REPOSITORIES](context, owner) {
-        return UserService.get(`${owner}/repos`)
-            .then(response => {
-                const repositories = response.map(repository => ({
-                    id: repository.id,
-                    name: repository.name,
-                    fullName: repository.full_name,
-                    ownerId: repository.owner.id,
-                    ownerLogin: repository.owner.login,
-                    htmlUrl: repository.html_url,
-                    description: repository.description,
-                    watchersCount: repository.watchers_count,
-                    forksCount: repository.forks_count,
-                    openIssuesCount: repository.open_issues_count,
-                    defaultBranch: repository.default_branch
-                }));
+    async [FETCH_REPOSITORY](context, repositoryUrl) {
+        const response = await RepositoryService.get(repositoryUrl);
+        const repository = {
+            id: response.id,
+            name: response.name,
+            fullName: response.full_name,
+            ownerId: response.owner.id,
+            ownerLogin: response.owner.login,
+            htmlUrl: response.html_url,
+            description: response.description,
+            watchersCount: response.watchers_count,
+            forksCount: response.forks_count,
+            openIssuesCount: response.open_issues_count,
+            defaultBranch: response.default_branch,
+            language: response.language
+        };
 
-                context.commit(SET_REPOSITORY, repositories);
-            })
-            .catch(err => { throw new Error(err) });
+        context.commit(SET_REPOSITORIES, repository);
     }
 }
 
 export const mutations = {
-    [SET_REPOSITORY](state, repositories) {
+    [SET_REPOSITORIES](state, repositories) {
         if (repositories instanceof Array) {
-            // Converts the result of array [1], [2] into [id], [id]
-            // I'm doing that so iteration is way faster than using filters and so
-            state.data = repositories.reduce((previous, repository) => ({
-                ...previous,
-                [repository.id]: repository
-            }), {});
+            state.data = transformToDataStore(repositories, 'fullName')
         } else {
-            state.data[repositories.id] = repositories;
+            state.data[repositories.fullName] = repositories;
         }
-    },
+
+        state.loading = false;
+        state.errors = {};
+    }
 }
 
 export const getters = {
     getRepositories: (state) => {
-        return state.data
+        return Object.values(state.data);
+    },
+
+    getTopThreeRepositories: (state) => {
+        // First, order decreasing by watchers
+        // Then, get the first 3 repos
+        return Object.values(state.data)
+            .sort((a, b) => b.watchersCount - a.watchersCount)
+            .slice(0, 3);
+    },
+
+    getRepositoryByUsernameAndName: (state) => (username, name) => {
+        return state.data[`${username}/${name}`];
     }
 }
 

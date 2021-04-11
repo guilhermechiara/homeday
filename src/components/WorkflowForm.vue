@@ -38,6 +38,10 @@
         <button type="submit" class="btn btn-light">Cancel</button>
       </div>
     </form>
+
+    <div class="mt-5">
+      <error v-bind:errors="errors"></error>
+    </div>
   </card>
 </template>
 
@@ -94,36 +98,51 @@
 
 <script>
   import Card from "./Card";
+  import Error from "@/components/Error";
 
   export default {
     name: 'workflow-form',
     components: {
+      Error,
       Card
     },
+
     data() {
       return {
         formContent: {
-          username: null,
-          email: null,
-          agreement: false
+          username: 'guilhermechiara',
+          email: 'chiara.guilherme@gmail.com',
+          agreement: true
         },
-        errors: []
+        errors: null
       }
     },
+
     methods: {
       onSubmit(formContent) {
-        this.errors = [];
-
-        this.isValid(formContent);
+        if (this.isValid(formContent)) {
+          this.$emit('submit', formContent);
+        }
       },
 
       isValid(formContent) {
-        if (!formContent.username) { this.errors.push('You must provide an username'); }
-        if (!formContent.email || !this.isValidEmail(formContent.email)) {
-          this.errors.push('You must provide a valid email');
+        this.errors = {
+          messages: []
+        };
+
+        if (!formContent.username) {
+          this.errors.messages.push('You must provide an username');
         }
 
-        console.log(this.errors);
+        if (!formContent.email || !this.isValidEmail(formContent.email)) {
+          this.errors.messages.push('You must provide a valid email');
+        }
+
+        if (!formContent.agreement) {
+          this.errors.messages.push('You must agree with the terms');
+        }
+
+        return this.errors.messages.length <= 0;
       },
 
       isValidEmail(email) {

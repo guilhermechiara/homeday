@@ -1,33 +1,51 @@
 <template>
   <div>
-    <repository-list v-bind:repositories="repositories"></repository-list>
+    <div class="workflow">
+      <card title="Workflow">
+        You can see the top repositories of an user going through the <router-link to="workflow">workflow</router-link>
+      </card>
+    </div>
+    <div class="repository">
+      <repository-list
+          v-bind:repositories="getTopThreeRepositories"
+          owner="homeday-de"
+      >
+      </repository-list>
+    </div>
   </div>
 </template>
 
+<style lang="scss">
+  .workflow {
+    margin-bottom: 2.4rem;
+  }
+</style>
+
 <script>
-  import store from "../store";
-  import RepositoryList from "../components/RepositoryList";
-  //import { FETCH_USER } from "../store/actions";
+  import { mapGetters } from 'vuex';
   import { FETCH_USER_REPOSITORIES } from "../store/actions";
+
+  import RepositoryList from "@/components/RepositoryList";
+  import Card from "@/components/Card";
 
   export default {
     name: 'view-home',
     components: {
+      Card,
       RepositoryList
     },
-    data() {
-      return {
-        repositories: [
-          { title: 'Something', subtitle: 'Random subtitle', url: '/repository/2' },
-          { title: 'Something', subtitle: 'Random subtitle', url: '/repository/2' },
-          { title: 'Something', subtitle: 'Random subtitle', url: '/repository/2' }
-        ]
+
+    async beforeMount() {
+      try {
+        await this.$store.dispatch(FETCH_USER_REPOSITORIES, 'homeday-de');
+      } catch(err) {
+        console.log(this.$router);
+        await this.$router.push('/not-found');
       }
     },
 
-    beforeRouteEnter(to, from, next) {
-      store.dispatch(FETCH_USER_REPOSITORIES, 'guilhermechiara')
-          .then(() => next());
+    computed: {
+      ...mapGetters(["getTopThreeRepositories"])
     }
   }
 </script>
